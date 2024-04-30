@@ -29,4 +29,11 @@
 // Solenoid Air Valve Control
 #define VALVE_CTLR        29
 
+// Control Pins from RPi GPIO
+#define S0_PIN            31
+#define S1_PIN            32
+#define S2_PIN            34
+
+#define S_INT             27    // Interrupt Notification
+
 #endif

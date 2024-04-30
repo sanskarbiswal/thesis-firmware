@@ -174,8 +174,21 @@ void init_serial(){
   Serial1.setRX(17u);
   Serial1.setTX(16u);
   Serial1.begin(9600);
+  delay(100);
 }
 
+
+// Function to Handle Interrupt from S_INT
+void handle_piINTR(){
+
+}
+
+void init_intr_pins(){
+  pinMode(S_INT, INPUT_PULLDOWN);
+  attachInterrupt(S_INT, handle_piINTR, RISING);
+
+  interrupts();
+}
 
 void setup() {
   // put your setup code here, to run once:
