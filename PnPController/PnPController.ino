@@ -9,10 +9,10 @@
 #define R_SENSE                 0.11f
 
 #define MOTOR_MICROSTEP         16
-#define MOTOR_CURRENT           300
+#define MOTOR_CURRENT           1000
 
 #define MOTOR_1                 // Z-Alignment Stepper Motor
-#define MOTOR_2                 // Hollow-Shaft Stepper Motor
+// #define MOTOR_2                 // Hollow-Shaft Stepper Motor
 
 #ifdef MOTOR_1
 SoftwareSerial m1_uart(M1_UART_RX, M1_UART_TX); // RX, TX
@@ -51,7 +51,7 @@ void init_stepper_motors(){
   pinMode(M1_DIR, OUTPUT);
   pinMode(M1_EN, OUTPUT);
 
-  pinMode(M1_EN, HIGH); // Hardware Enable 
+  digitalWrite(M1_EN, HIGH); // Hardware Enable 
   stepper1.connectToPins(M1_STEP, M1_DIR);
 
   driver1.begin();
@@ -164,7 +164,7 @@ void valve_OFF(){
  * Funtion to rotate Motor 1 by param angle
  * param[in] angle
 */
-void rotate_motor1_by_angle(long angle){
+void rotate_motor1_by_angle(float angle){
   long curr_pos = stepper1.getCurrentPositionInSteps();
   long target_pos = curr_pos - (angle * STEPS_PER_REVOLUTION/360);
   stepper1.moveToPositionInSteps(target_pos);
@@ -174,6 +174,11 @@ void init_serial(){
   Serial1.setRX(17u);
   Serial1.setTX(16u);
   Serial1.begin(9600);
+
+  m1_uart.begin(9600);
+  #ifdef MOTOR_2
+  m2_uart.begin(9600);
+  #endif
   delay(100);
 }
 
@@ -193,14 +198,23 @@ void init_intr_pins(){
 void setup() {
   // put your setup code here, to run once:
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(VALVE_CTLR, OUTPUT);
+
+  init_serial();
+  init_stepper_motors();
+  enable_motor(1);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   digitalWrite(LED_BUILTIN, HIGH);
+  valve_ON();
+  rotate_motor1_by_angle(10);
   delay(1000);
   digitalWrite(LED_BUILTIN, LOW);
-  delay(5000);
+  valve_OFF();
+  rotate_motor1_by_angle(-10);
+  delay(2000);
 
 }
 

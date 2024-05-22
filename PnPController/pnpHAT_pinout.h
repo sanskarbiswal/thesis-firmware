@@ -2,38 +2,38 @@
 #define _PNPHAT_PINOOUT_H
 
 // Raspberry Pi UART Connection
-#define PI_TX             16
-#define PI_RX             17
+const int PI_TX = 12;
+const int PI_RX = 13;
 
 // Motor 1
-#define M1_DIR            4
-#define M1_STEP           5
-#define M1_UART_TX        6
-#define M1_UART_RX        7
-#define M1_EN             25
+const int M1_DIR = 2;
+const int M1_STEP = 3;
+const int M1_UART_TX = 4;
+const int M1_UART_RX = 5;
+const int M1_EN =  19;
 
 // Motor 2
-#define M2_STEP           9
-#define M2_DIR            10
-#define M2_UART_TX        11
-#define M2_UART_RX        12
-#define M2_EN             26
+const int M2_STEP = 6;
+const int M2_DIR = 7;
+const int M2_UART_TX = 8;
+const int M2_UART_RX = 9;
+const int M2_EN =  20;
 
-// Motor 3
-#define M3_STEP           19
-#define M3_DIR            20
-#define M3_UART_TX        21
-#define M3_UART_RX        22
+// Motor 3 TODO: Fix GPIO pinout
+const int M3_STEP = 19;
+const int M3_DIR = 20;
+const int M3_UART_TX = 21;
+const int M3_UART_RX = 22;
 // Motor 3 is always enabled
 
 // Solenoid Air Valve Control
-#define VALVE_CTLR        29
+const int VALVE_CTLR = 22;
 
 // Control Pins from RPi GPIO
-#define S0_PIN            31
-#define S1_PIN            32
-#define S2_PIN            34
+const int S0_PIN = 26;
+const int S1_PIN = 27;
+const int S2_PIN = 28;
 
-#define S_INT             27    // Interrupt Notification
+const int S_INT =  21;    // Interrupt Notification
 
 #endif
