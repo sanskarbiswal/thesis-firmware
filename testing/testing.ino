@@ -59,7 +59,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   digitalWrite(LED_BUILTIN, HIGH);
-  // digitalWrite(valve, HIGH);
+  digitalWrite(valve, HIGH);
   digitalWrite(M_EN, LOW);
   stepper.moveRelativeInSteps(1000);
   digitalWrite(M_EN, HIGH);
@@ -68,7 +68,7 @@ void loop() {
   digitalWrite(M_EN2, HIGH);
   delay(500);
   digitalWrite(LED_BUILTIN, LOW);
-  // digitalWrite(valve, LOW);
+  digitalWrite(valve, LOW);
   digitalWrite(M_EN, LOW);
   stepper.moveRelativeInSteps(-1000);
   digitalWrite(M_EN, HIGH);
