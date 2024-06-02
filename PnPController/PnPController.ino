@@ -1,7 +1,4 @@
-#include <SoftwareSerial.h>
-#include <HardwareSerial.h>
 #include <SpeedyStepper.h>
-#include <TMCStepper.h>
 
 #include "pnpHAT_pinout.h"
 
@@ -12,27 +9,28 @@
 #define MOTOR_CURRENT           1000
 
 #define MOTOR_1                 // Z-Alignment Stepper Motor
-// #define MOTOR_2                 // Hollow-Shaft Stepper Motor
+#define MOTOR_2                 // Hollow-Shaft Stepper Motor
 
 #ifdef MOTOR_1
-SoftwareSerial m1_uart(M1_UART_RX, M1_UART_TX); // RX, TX
-TMC2209Stepper driver1(&m1_uart, R_SENSE, 0b00);
+// SoftwareSerial m1_uart(M1_UART_RX, M1_UART_TX); // RX, TX
+// TMC2209Stepper driver1(&m1_uart, R_SENSE, 0b00);
 SpeedyStepper stepper1;
 #endif
 
 #ifdef MOTOR_2
-SoftwareSerial m2_uart(M2_UART_RX, M2_UART_TX); // RX, TX
-TMC2209Stepper driver2(&m2_uart, R_SENSE, 0b01);
+// SoftwareSerial m2_uart(M2_UART_RX, M2_UART_TX); // RX, TX
+// TMC2209Stepper driver2(&m2_uart, R_SENSE, 0b01);
 SpeedyStepper stepper2;
 #endif
 
 #ifdef MOTOR_3
-SoftwareSerial m3_uart(M3_UART_RX, M3_UART_TX); // RX, TX
-TMC2209Stepper driver3(&m3_uart, R_SENSE, 0b10);
+// SoftwareSerial m3_uart(M3_UART_RX, M3_UART_TX); // RX, TX
+// TMC2209Stepper driver3(&m3_uart, R_SENSE, 0b10);
 SpeedyStepper stepper3;
 #endif
 
 // ------------------ Function Declaration -------------------- //
+void init_gpio(void);
 void init_stepper_motors(void);
 void enable_motor(int);
 void disable_motor(int);
@@ -51,21 +49,25 @@ void init_stepper_motors(){
   pinMode(M1_DIR, OUTPUT);
   pinMode(M1_EN, OUTPUT);
 
-  digitalWrite(M1_EN, HIGH); // Hardware Enable 
   stepper1.connectToPins(M1_STEP, M1_DIR);
 
-  driver1.begin();
-  driver1.toff(5);          // Enables Driver in Software
-  driver1.rms_current(MOTOR_CURRENT);
-  driver1.microsteps(MOTOR_MICROSTEP);
+  // driver1.begin();
+  // driver1.toff(5);          // Enables Driver in Software
+  // driver1.rms_current(MOTOR_CURRENT);
+  // driver1.microsteps(MOTOR_MICROSTEP);
 
   // driver1.pwm_autoscale(true);    // Needed for stealthChop
   // driver1.en_spreadCycle(true);   // false = StealthChop / true = SpreadCycle
-  driver1.en_spreadCycle(false);
+  // driver1.en_spreadCycle(false);
 
-  stepper1.setCurrentPositionInSteps(0);
-  stepper1.setSpeedInStepsPerSecond(400);
-  stepper1.setAccelerationInStepsPerSecondPerSecond(400);
+  // stepper1.setCurrentPositionInSteps(0);
+  stepper1.setSpeedInStepsPerSecond(100);
+  stepper1.setAccelerationInStepsPerSecondPerSecond(100);
+
+  digitalWrite(M1_EN, HIGH); // Hardware Enable 
+  // stepper1.setStepsPerMillimeter(25*1);
+  // stepper1.setSpeedInMillimetersPerSecond(10.0);
+  // stepper1.setAccelerationInMillimetersPerSecondPerSecond(10.0);
   #endif
   
   #ifdef MOTOR_2
@@ -76,14 +78,14 @@ void init_stepper_motors(){
   pinMode(M2_EN, HIGH); // Hardware Enable 
   stepper2.connectToPins(M2_STEP, M2_DIR);
 
-  driver2.begin();
-  driver2.toff(5);          // Enables Driver in Software
-  driver2.rms_current(MOTOR_CURRENT);
-  driver2.microsteps(MOTOR_MICROSTEP);
+  // driver2.begin();
+  // driver2.toff(5);          // Enables Driver in Software
+  // driver2.rms_current(MOTOR_CURRENT);
+  // driver2.microsteps(MOTOR_MICROSTEP);
 
   // driver2.pwm_autoscale(true);    // Needed for stealthChop
   // driver2.en_spreadCycle(true);   // false = StealthChop / true = SpreadCycle
-  driver2.en_spreadCycle(false);
+  // driver2.en_spreadCycle(false);
 
   stepper2.setCurrentPositionInSteps(0);
   stepper2.setSpeedInStepsPerSecond(400);
@@ -93,18 +95,17 @@ void init_stepper_motors(){
   #ifdef MOTOR_3
   pinMode(M3_STEP, OUTPUT);
   pinMode(M3_DIR, OUTPUT);
-  pinMode(M3_EN, OUTPUT);
 
   stepper3.connectToPins(M3_STEP, M3_DIR);
 
-  driver3.begin();
-  driver3.toff(5);          // Enables Driver in Software
-  driver3.rms_current(MOTOR_CURRENT);
-  driver3.microsteps(MOTOR_MICROSTEP);
+  // driver3.begin();
+  // driver3.toff(5);          // Enables Driver in Software
+  // driver3.rms_current(MOTOR_CURRENT);
+  // driver3.microsteps(MOTOR_MICROSTEP);
 
   // driver3.pwm_autoscale(true);    // Needed for stealthChop
   // driver3.en_spreadCycle(true);   // false = StealthChop / true = SpreadCycle
-  driver3.en_spreadCycle(false);
+  // driver3.en_spreadCycle(false);
 
   stepper3.setCurrentPositionInSteps(0);
   stepper3.setSpeedInStepsPerSecond(400);
@@ -144,6 +145,32 @@ void disable_motor(int motorID){
   }
 }
 
+
+/*
+ * Function to Engage/Disengage Z-Rig
+ * Toggle Paradigm
+ * If the rig is not engaged, turn on and move to active position
+ * Else, turn on and return to home position
+*/
+void toggle_z_rig(){
+  enable_motor(1);
+  // if (rigState){
+  //   // stepper1.moveToPositionInMillimeters(0.0);
+  //   stepper1.moveToPositionInSteps(0);
+  //   delay(1000);
+  //   rigState = false;
+  // } else {
+  //   // stepper1.moveToPositionInMillimeters(100.0);
+  //   stepper1.moveToPositionInSteps(400.0);
+  //   delay(1000);
+  //   rigState = true;
+  // }
+  stepper1.moveRelativeInSteps(500);
+  delay(1000);
+  stepper1.moveRelativeInSteps(-500);
+  disable_motor(1);
+}
+
 /*
  * Function to Turn ON Valve
  * NMOS Control - Pulled-down at Gate
@@ -175,10 +202,12 @@ void init_serial(){
   Serial1.setTX(16u);
   Serial1.begin(9600);
 
-  m1_uart.begin(9600);
-  #ifdef MOTOR_2
-  m2_uart.begin(9600);
-  #endif
+  // #ifdef MOTOR_1
+  // m1_uart.begin(9600);
+  // #endif
+  // #ifdef MOTOR_2
+  // m2_uart.begin(9600);
+  // #endif
   delay(100);
 }
 
@@ -188,34 +217,48 @@ void handle_piINTR(){
 
 }
 
+
+// Function to toggle interrupt from S0_PIN
+void toggle_valve(){
+  if(valveState){
+    valve_OFF();
+    valveState = false;
+  }else {
+    valve_ON();
+    valveState = true;
+  }
+}
+
 void init_intr_pins(){
   pinMode(S_INT, INPUT_PULLDOWN);
   attachInterrupt(S_INT, handle_piINTR, RISING);
 
+  pinMode(S0_PIN, INPUT_PULLDOWN);
+  attachInterrupt(S0_PIN, toggle_valve, RISING);
+
   interrupts();
 }
 
-void setup() {
-  // put your setup code here, to run once:
+void init_gpio(){
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(VALVE_CTLR, OUTPUT);
+}
 
-  init_serial();
+void setup() {
+  init_gpio();
+  // init_serial();
   init_stepper_motors();
-  enable_motor(1);
+  // enable_motor(1);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   digitalWrite(LED_BUILTIN, HIGH);
-  valve_ON();
-  rotate_motor1_by_angle(10);
+  toggle_z_rig();
   delay(1000);
   digitalWrite(LED_BUILTIN, LOW);
-  valve_OFF();
-  rotate_motor1_by_angle(-10);
-  delay(2000);
-
+  toggle_z_rig();
+  delay(1000);
 }
 
 
