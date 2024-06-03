@@ -50,6 +50,8 @@ void disable_motor(int);
 void valve_ON(void);
 void valve_OFF(void);
 void toggle_z_rig(void);
+void toggle_valve(void);
+void init_intr(void);
 
 
 void init_gpio(){
@@ -64,6 +66,9 @@ void init_gpio(){
   pinMode(M2_STEP, OUTPUT);
 
   pinMode(VALVE_CTLR, OUTPUT);
+
+  pinMode(S0_PIN, INPUT_PULLDOWN);
+  pinMode(S1_PIN, INPUT_PULLDOWN);
 }
 
 void init_stepper_motors(){
@@ -72,6 +77,11 @@ void init_stepper_motors(){
   stepper1.setSpeedInMillimetersPerSecond(50);
   stepper1.setAccelerationInMillimetersPerSecondPerSecond(20);
   digitalWrite(M1_EN, HIGH);
+
+  stepper2.connectToPins(M2_STEP, M2_DIR);
+  stepper2.setSpeedInStepsPerSecond(100);
+  stepper2.setAccelerationInStepsPerSecondPerSecond(100);
+  digitalWrite(M2_EN, HIGH);
 }
 
 void enable_motor(int motorID){
@@ -101,7 +111,19 @@ void valve_ON(){
 }
 
 void valve_OFF(){
-  digitalWrite(VALVE_CTLR, LOW);;
+  digitalWrite(VALVE_CTLR, LOW);
+}
+
+void toggle_valve(){
+  if (valveState){
+    valveState = false;
+    valve_OFF();
+    digitalWrite(LED_BUILTIN, LOW);
+  } else {
+    valveState = true;
+    valve_ON();
+    digitalWrite(LED_BUILTIN, HIGH);
+  }
 }
 
 void toggle_z_rig(){
@@ -110,24 +132,29 @@ void toggle_z_rig(){
     stepper1.moveToPositionInMillimeters(0);
     rigState = false;
     delay(100);
+    digitalWrite(LED_BUILTIN, LOW);
   } else {
     stepper1.moveToPositionInMillimeters(-510);
     rigState = true;
     delay(100);
+    digitalWrite(LED_BUILTIN, HIGH);
   }
+}
+
+void init_intr(){
+  attachInterrupt(S0_PIN, toggle_valve, FALLING);
+  attachInterrupt(S1_PIN, toggle_z_rig, FALLING);
 }
 
 void setup() {
   // put your setup code here, to run once:
   init_gpio();
+  init_intr();
   init_stepper_motors();
   
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  digitalWrite(LED_BUILTIN, HIGH);
-  toggle_z_rig();
-  digitalWrite(LED_BUILTIN, LOW);
-  toggle_z_rig();
+  // delay(10);
 }
