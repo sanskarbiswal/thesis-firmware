@@ -1,5 +1,5 @@
 #include<SpeedyStepper.h>
-
+#include<Arduino.h>
 
 // ------------------------------------ GPIO Connections --------------------------------------//
 // Raspberry Pi UART Connection
@@ -146,8 +146,27 @@ void init_intr(){
   attachInterrupt(S1_PIN, toggle_z_rig, FALLING);
 }
 
+void handle_uart(int data){
+  switch(data) {
+    case 100:
+      valve_OFF();
+      digitalWrite(LED_BUILTIN, LOW);
+      break;
+    case 101:
+      valve_ON();
+      digitalWrite(LED_BUILTIN, HIGH);
+      break;
+    
+    case 200:
+      break;
+    default:
+      break;
+  }
+}
+
 void setup() {
   // put your setup code here, to run once:
+  Serial.begin(9600);
   init_gpio();
   init_intr();
   init_stepper_motors();
@@ -157,4 +176,9 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // delay(10);
+  // Check if data is available on USB Serial
+  if (Serial.available()) {
+    int data = Serial.parseInt();
+    handle_uart(data);
+  }
 }
