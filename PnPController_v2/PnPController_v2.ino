@@ -30,6 +30,13 @@ const int S2_PIN = 28;
 
 const int S_INT =  21;    // Interrupt Notification
 
+struct tool_status {
+  bool valveState;
+  bool rigState;
+};
+
+tool_status status = {false, false};
+
 // ------------------------ Global Variables ---------------------------------- //
 // States affected by INTR from  RPi
 volatile bool valveState = false;
@@ -52,6 +59,10 @@ void valve_OFF(void);
 void toggle_z_rig(void);
 void toggle_valve(void);
 void init_intr(void);
+void handle_uart(String);
+void transmitStatus(void);
+void resumePrinterOps(void);
+void test_motor_2(void);
 
 
 void init_gpio(){
@@ -108,19 +119,19 @@ void disable_motor(int motorID){
 
 void valve_ON(){
   digitalWrite(VALVE_CTLR, HIGH);
+  valveState = true;
 }
 
 void valve_OFF(){
   digitalWrite(VALVE_CTLR, LOW);
+  valveState = false;
 }
 
 void toggle_valve(){
   if (valveState){
-    valveState = false;
     valve_OFF();
     digitalWrite(LED_BUILTIN, LOW);
   } else {
-    valveState = true;
     valve_ON();
     digitalWrite(LED_BUILTIN, HIGH);
   }
@@ -146,23 +157,93 @@ void init_intr(){
   attachInterrupt(S1_PIN, toggle_z_rig, FALLING);
 }
 
-void handle_uart(int data){
-  switch(data) {
-    case 100:
-      valve_OFF();
-      digitalWrite(LED_BUILTIN, LOW);
-      break;
-    case 101:
-      valve_ON();
-      digitalWrite(LED_BUILTIN, HIGH);
-      break;
-    
-    case 200:
-      break;
-    default:
-      break;
+void handle_uart(String data){
+  if (data.startsWith("301")){
+    float angle = data.substring(4).toFloat();
+    // Handle Angle Rotation
+    int steps = angle;
+    enable_motor(2);
+    digitalWrite(LED_BUILTIN, HIGH);
+    stepper2.moveRelativeInSteps(steps);
+    delay(1000);
+    disable_motor(2);
+    digitalWrite(LED_BUILTIN, LOW);
+
+  }else{
+    int cmd = data.toInt();
+    switch(cmd) {
+      case 100:
+        if (valveState) {
+          valve_OFF();
+          digitalWrite(LED_BUILTIN, LOW);
+          valveState = false;
+          status.valveState = valveState;
+        }
+        break;
+      case 101:
+        if (!valveState) {
+          valve_ON();
+          digitalWrite(LED_BUILTIN, HIGH);
+          valveState = true;
+          status.valveState = valveState;
+        }
+        break;
+      
+      case 200:
+        if (rigState){
+          rigState = false;
+          enable_motor(1);
+          stepper1.moveToPositionInMillimeters(0);
+          delay(100);
+          disable_motor(1);
+          rigState = false;
+          status.rigState = rigState;
+        }
+        break;
+
+      case 201:
+        if (!rigState){
+          rigState = true;
+          enable_motor(1);
+          stepper1.moveToPositionInMillimeters(-510);
+          delay(100);
+          disable_motor(1);
+          rigState = true;
+          status.rigState = rigState;
+        }
+        break;
+
+      case 900:
+        transmitStatus();
+        break;
+
+      default:
+        break;
+    }
   }
 }
+
+void transmitStatus() {
+  Serial.print("status ");
+  Serial.print(status.valveState ? "1" : "0");
+  Serial.print(status.rigState ? "1" : "0");
+  Serial.println();
+}
+
+void resumePrinterOps(){
+  Serial.println("RESUME");
+}
+
+void test_motor_2(){
+  int angle = 60;
+  int steps = (5/9)*angle;
+  enable_motor(2);
+  digitalWrite(LED_BUILTIN, HIGH);
+  stepper2.moveRelativeInSteps(steps);
+  disable_motor(2);
+  digitalWrite(LED_BUILTIN, LOW);
+}
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -170,15 +251,21 @@ void setup() {
   init_gpio();
   init_intr();
   init_stepper_motors();
-  
+  status.valveState = false;
+  status.rigState = false;  
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   // delay(10);
+  // Test Motor 2
+  // test_motor_2();
+  // delay(1000);
   // Check if data is available on USB Serial
   if (Serial.available()) {
-    int data = Serial.parseInt();
+    String data = Serial.readStringUntil('\n');
     handle_uart(data);
+    transmitStatus();
+    resumePrinterOps();
   }
 }
